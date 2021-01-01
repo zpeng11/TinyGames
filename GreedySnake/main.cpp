@@ -24,6 +24,7 @@ int scanKeyboard()
     tcgetattr(0,&stored_settings);
     new_settings = stored_settings;
     new_settings.c_lflag &= (~ICANON);
+    new_settings.c_lflag &= (~ECHO);
     new_settings.c_cc[VTIME] = 0;
     tcgetattr(0,&stored_settings);
     new_settings.c_cc[VMIN] = 1;
@@ -122,9 +123,7 @@ int main()
     {
         MoveForward(m, sb);
         m.SpaceSet(TargetPos,Target);
-        pthread_mutex_lock(&mtx);
         m.reflash();
-        pthread_mutex_unlock(&mtx);
         usleep(200000);
     }
     pthread_join(tid,NULL);

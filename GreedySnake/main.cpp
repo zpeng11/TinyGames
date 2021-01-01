@@ -3,7 +3,7 @@
 #include "Types.h"
 #include <iostream>
 #include <unistd.h>
-#include <termio.h>
+#include <termios.h>
 #include <stdio.h>
 #include <pthread.h>
 

@@ -10,6 +10,7 @@ typedef enum SpaceType{
 
 typedef enum StateType{
     Work=1,
+    Reset,
     End
  }StateType;
 

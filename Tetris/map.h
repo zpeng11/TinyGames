@@ -19,7 +19,7 @@ class Map
     Posi GetPosi(Posi pos, Direction dir);
     SpaceType GetType(Posi pos);
     SpaceType SpaceSet(Posi pos, SpaceType st);//set the position to st and return the old space type
-    Posi SpaceGen();
+    //Posi SpaceGen();
 };
 
 

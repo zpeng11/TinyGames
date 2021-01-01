@@ -12,8 +12,9 @@ using namespace std;
 Posi TargetPos; 
 StateType State;
 Direction * dir;
-Map m (-1,-1);
-SnakeBody sb(m, 5);
+Map m(-1,-1);
+SnakeBody sb(m,5);
+
 
 int scanKeyboard()
 {
@@ -93,6 +94,9 @@ void * KeyHandle(void * arg)
             case 'q':
             State = End;
             break;
+            case 'r':
+            State = Reset;
+            break;
             default:
             *dir = Up;
             break;
@@ -103,6 +107,10 @@ void * KeyHandle(void * arg)
 
 int main()
 {
+
+    reset:
+    m = Map(-1,-1);
+    sb = SnakeBody(m, 5);
     TargetPos = m.SpaceGen();
     m.SpaceSet(TargetPos,Target);
     m.reflash();
@@ -114,10 +122,14 @@ int main()
     {
         MoveForward(m, sb);
         m.SpaceSet(TargetPos,Target);
+        pthread_mutex_lock(&mtx);
         m.reflash();
+        pthread_mutex_unlock(&mtx);
         usleep(200000);
     }
     pthread_join(tid,NULL);
+    if(State == Reset)
+        goto reset;
     cout<<"\033[0m"<<endl;//reset
-    cout<<"\033["<< 10<<";"<<0<<"H"<<endl<<"End of Game"<<endl;
+    cout<<"\033["<< m.limits.y<<";"<<0<<"H"<<endl<<"End of Game"<<endl;
 }

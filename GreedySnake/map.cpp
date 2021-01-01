@@ -71,7 +71,7 @@ Map::Map(int x, int y)
 
 void Map::reflash()
 {
-    cout<<"\033[?25l";
+    cout<<"\033[?25l";//hide curser
     cout<<"\033[0;34;47m";
     for(int i = 0 ; i< this->limits.y; i++)
     {
@@ -96,6 +96,7 @@ void Map::reflash()
         }
     }
     cout<<"\033[0m";//reset
+    cout<<"\033[?25h";//unhide curser
 }
 
 Posi Map::GetPosi(Posi pos, Direction dir)

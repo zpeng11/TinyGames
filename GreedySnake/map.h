@@ -15,9 +15,10 @@ class Map
     friend void MoveForward(Map & m, SnakeBody & sb);
     friend void * KeyHandle(void * arg);
     private:
-    MapLimit limits;
+    
     std::vector<std::vector<SpaceType> > space;
     public:
+    MapLimit limits;
     Map(int x=0, int y=0);
     void reflash();
     Posi GetPosi(Posi pos, Direction dir);

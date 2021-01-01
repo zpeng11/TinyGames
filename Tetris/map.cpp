@@ -135,6 +135,7 @@ SpaceType Map::GetType(Posi pos)
     return this->space[pos.y][pos.x];
 }
 
+/*
 Posi Map::SpaceGen()
 {
     Posi pos;
@@ -146,6 +147,7 @@ Posi Map::SpaceGen()
     }while(this->GetType(pos) != Space);
     return pos;
 }
+*/
 
 SpaceType  Map::SpaceSet(Posi pos, SpaceType st)
 {

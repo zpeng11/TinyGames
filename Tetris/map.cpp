@@ -63,12 +63,12 @@ Map::Map(int x, int y)
         cout<<"Set to x="<<this->limits.x<<" ,y="<<this->limits.y<<endl;
     }
     
-    this->space = vector<vector<SpaceType> >(this->limits.y, vector<SpaceType>(this->limits.x, Space));
+    this->space = vector<vector<SpaceType>>(this->limits.y, vector<SpaceType>(this->limits.x, Space));
     ss<<y_save*string("\n");//clear space
     cout<<ss.str()<<endl;
     this->reflash();
 }
-
+/*
 void Map::reflash()
 {
     cout<<"\033[?25l";
@@ -97,6 +97,7 @@ void Map::reflash()
     }
     cout<<"\033[0m";//reset
 }
+*/
 
 Posi Map::GetPosi(Posi pos, Direction dir)
 {

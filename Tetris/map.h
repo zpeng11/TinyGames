@@ -6,17 +6,13 @@
 
 MapLimit GetMapLimit(void);
 
-class SnakeBody;
 
 
 class Map
 {
-    friend class SnakeBody;
-    friend void MoveForward(Map & m, SnakeBody & sb);
-    friend void * KeyHandle(void * arg);
     private:
     MapLimit limits;
-    std::vector<std::vector<SpaceType> > space;
+    std::vector<std::vector<SpaceType>> space;
     public:
     Map(int x=0, int y=0);
     void reflash();

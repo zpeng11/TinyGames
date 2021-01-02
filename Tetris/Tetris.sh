@@ -1,0 +1,1 @@
+g++ tetromino.cpp map.cpp main.cpp -g -pthread -o main && ./main

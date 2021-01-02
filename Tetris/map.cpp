@@ -64,14 +64,14 @@ Map::Map(int x, int y)
     }
     
     this->space = vector<vector<SpaceType>>(this->limits.y, vector<SpaceType>(this->limits.x, Space));
+    this->colormap = vector<vector<ColorType>>(this->limits.y, vector<ColorType>(this->limits.x, Red));
     ss<<y_save*string("\n");//clear space
     cout<<ss.str()<<endl;
     this->reflash();
 }
-/*
+
 void Map::reflash()
 {
-    cout<<"\033[?25l";
     cout<<"\033[0;34;47m";
     for(int i = 0 ; i< this->limits.y; i++)
     {
@@ -84,24 +84,33 @@ void Map::reflash()
                 cout<<"\033[0;34;47m"<<"  ";//SAME
                 break;
                 case Target:
-                cout<<"\033[0;34;41m"<<"  ";//red target
-                break;
-                case Snakebody:
-                cout<<"\033[0;34;44m"<<"  ";//blue body
-                break;
-                case Snakehead:
-                cout<<"\033[0;34;42m"<<"HH";//green head
+                int c;
+                switch(this->colormap[i][j])
+                {
+                    case Red:
+                    c = 41;
+                    break;
+                    case Green:
+                    c = 42;
+                    break;
+                    case Blue:
+                    c = 44;
+                    break;
+                }
+                cout<<"\033[0;34;"<<c<<"m"<<"  ";//colored target
                 break;
             }
         }
     }
     cout<<"\033[0m";//reset
+    cout.flush();
 }
-*/
+
 
 Posi Map::GetPosi(Posi pos, Direction dir)
 {
-    assert(pos.x>= 0 && pos.x< this->limits.x && pos.y>= 0 && pos.y <this->limits.y && "Invalid position");
+    if(!VALIDPOSI(pos))
+        return {-1,-1};
     switch(dir)
     {
         case Up:
@@ -118,13 +127,13 @@ Posi Map::GetPosi(Posi pos, Direction dir)
         break;
     }
     if(pos.x<0)
-        pos.x = this->limits.x -1;
+        pos.x = -1;
     if(pos.x>= this->limits.x)
-        pos.x = 0;
+        pos.x = -1;
     if(pos.y<0)
-        pos.y = this->limits.y -1;
+        pos.y = -1;
     if(pos.y>= this->limits.y)
-        pos.y = 0;
+        pos.y = -1;
         
     return pos;
 }
@@ -135,19 +144,11 @@ SpaceType Map::GetType(Posi pos)
     return this->space[pos.y][pos.x];
 }
 
-/*
-Posi Map::SpaceGen()
+ColorType Map::GetColor(Posi pos)
 {
-    Posi pos;
-    do{
-        srand(time(NULL));
-        int temp = rand()%(this->limits.x*this->limits.y);
-        pos.x = temp%this->limits.x;
-        pos.y = temp/this->limits.x;
-    }while(this->GetType(pos) != Space);
-    return pos;
+    assert(pos.x>= 0 && pos.x< this->limits.x && pos.y>= 0 && pos.y <this->limits.y && "Invalid position");
+    return this->colormap[pos.y][pos.x];
 }
-*/
 
 SpaceType  Map::SpaceSet(Posi pos, SpaceType st)
 {
@@ -156,26 +157,17 @@ SpaceType  Map::SpaceSet(Posi pos, SpaceType st)
     this->space[pos.y][pos.x] = st;
     return oldst;
 }
+ColorType Map::ColorSet(Posi pos, ColorType ct)
+{
+    assert(pos.x>= 0 && pos.x< this->limits.x && pos.y>= 0 && pos.y <this->limits.y && "Invalid position");
+    ColorType oldct = this->colormap[pos.y][pos.x];
+    this->colormap[pos.y][pos.x] = ct;
+    return oldct;
+}
 
 /*
 int main()
 {
-    Map m(-1,-1);
-    Posi find = m.GetPosi({0,0},Down);
-    m.SpaceSet(find, Target);
-     find = m.GetPosi({0,0},Left);
-     m.SpaceSet(find, Snakehead);
-     find = m.GetPosi({0,0},Up);
-     m.SpaceSet(find, Snakebody);
-     find = m.GetPosi({0,0},Right);
-    m.SpaceSet(find, Target);
-    m.reflash();
-   
-    while(1){
-    find = m.SpaceGen();
-    m.space[find.y][find.x] = Target;
-    m.reflash();
-    sleep(1);
-    }
+    Map m(10,20);
 }
 */

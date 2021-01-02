@@ -1,5 +1,6 @@
-## W->up 
-## S->down
-## A->left
-## D->right
+## w->up 
+## s->down
+## a->left
+## d->right
+## r->reset game
 ## q->Quit and End Game

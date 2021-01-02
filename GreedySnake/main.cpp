@@ -108,7 +108,7 @@ void * KeyHandle(void * arg)
 
 int main()
 {
-
+    cout<<"\033[?25l";//hide curser
     reset:
     m = Map(-1,-1);
     sb = SnakeBody(m, 5);
@@ -130,5 +130,6 @@ int main()
     if(State == Reset)
         goto reset;
     cout<<"\033[0m"<<endl;//reset
+    cout<<"\033[?25h";//unhide curser
     cout<<"\033["<< m.limits.y<<";"<<0<<"H"<<endl<<"End of Game"<<endl;
 }

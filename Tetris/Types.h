@@ -3,16 +3,30 @@
 
 typedef enum SpaceType{
     Target,
-    Space,
-    Shadow
+    Space
  }SpaceType;
 
+typedef enum ColorType{
+    Red=0,
+    Green,
+    Blue
+ }ColorType;
+
+typedef enum TetrominoType{
+    Stype=0,
+    Ztype,
+    Ltype,
+    Jtype,
+    Itype,
+    Otype,
+    Ttype
+}TetrominoType;
 
 typedef enum Direction{
     Left=0,
-    Right=1,
-    Up=2,
-    Down=3
+    Up,
+    Right,
+    Down
  }Direction;
 
 typedef struct Posi
@@ -20,6 +34,13 @@ typedef struct Posi
     int x;
     int y;
 }Posi;
+
+typedef enum StateType{
+    WorkState=1,
+    ResetState,
+    EndState
+ }StateType;
+
 
 #define  MapLimit Posi
 

@@ -7,19 +7,23 @@
 MapLimit GetMapLimit(void);
 
 
+#define VALIDPOSI(Position) ((Position).x != -1 && (Position).y != -1)
 
 class Map
 {
     private:
-    MapLimit limits;
-    std::vector<std::vector<SpaceType>> space;
     public:
+    std::vector<std::vector<SpaceType>> space;
+    std::vector<std::vector<ColorType>> colormap;
+    
+    MapLimit limits;
     Map(int x=0, int y=0);
     void reflash();
-    Posi GetPosi(Posi pos, Direction dir);
-    SpaceType GetType(Posi pos);
-    SpaceType SpaceSet(Posi pos, SpaceType st);//set the position to st and return the old space type
-    //Posi SpaceGen();
+    Posi GetPosi(Posi pos, Direction dir);//Dont gerentee to get valid posi, need the macro to validate
+    SpaceType GetType(Posi pos);//require Posi to be valid
+    ColorType GetColor(Posi pos);
+    SpaceType SpaceSet(Posi pos, SpaceType st);//requir posi to be valid set the position to st and return the old space type
+    ColorType ColorSet(Posi pos, ColorType ct);
 };
 
 

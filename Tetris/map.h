@@ -13,8 +13,8 @@ class Map
 {
     private:
     public:
-    std::vector<std::vector<SpaceType>> space;
-    std::vector<std::vector<ColorType>> colormap;
+    std::vector<std::vector<SpaceType> > space;
+    std::vector<std::vector<ColorType> > colormap;
     
     MapLimit limits;
     Map(int x=0, int y=0);

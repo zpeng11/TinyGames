@@ -63,8 +63,8 @@ Map::Map(int x, int y)
         cout<<"Set to x="<<this->limits.x<<" ,y="<<this->limits.y<<endl;
     }
     
-    this->space = vector<vector<SpaceType>>(this->limits.y, vector<SpaceType>(this->limits.x, Space));
-    this->colormap = vector<vector<ColorType>>(this->limits.y, vector<ColorType>(this->limits.x, Red));
+    this->space = vector<vector<SpaceType> >(this->limits.y, vector<SpaceType>(this->limits.x, Space));
+    this->colormap = vector<vector<ColorType> >(this->limits.y, vector<ColorType>(this->limits.x, Red));
     ss<<y_save*string("\n");//clear space
     cout<<ss.str()<<endl;
     this->reflash();

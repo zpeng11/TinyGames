@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <algorithm>
+#include <stdlib.h>
 using namespace std;
 
 Map m(15,20);
@@ -37,7 +38,6 @@ int scanKeyboard()
 
 bool move(Direction dir);
 bool rotate(void);
-bool validate();
 
 bool move(Direction dir)
 {
@@ -130,6 +130,13 @@ void check_clear_line(void)
     }
 }
 
+void funcAtExit()
+{
+    cout<<"\033[0m"<<endl;//reset
+    cout<<"\033[?25h";//unhide curser
+    cout<<"\033["<< m.limits.y<<";"<<0<<"H"<<endl<<"End of Game"<<endl;
+}
+
 int main()
 {
     cout<<"\033[?25l";//hide curser
@@ -153,7 +160,5 @@ int main()
     pthread_join(tid,NULL);
     if(state == ResetState)
         goto reset;
-    cout<<"\033[0m"<<endl;//reset
-    cout<<"\033[?25h";//unhide curser
-    cout<<"\033["<< m.limits.y<<";"<<0<<"H"<<endl<<"End of Game"<<endl;
+    atexit(funcAtExit);
 }

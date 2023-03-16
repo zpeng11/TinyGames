@@ -10,9 +10,18 @@
 #include <string.h>
 #include <errno.h>
 
+
+#include <iostream>
+using namespace std;
+
 #define TIME_POSI 0 
 #define SIGNAL_POSI 1
 #define KEYBOARD_POSI 2
+
+#define handle_error(msg) \
+           do { perror(msg); exit(EXIT_FAILURE); } while (0)
+
+
 EventLoop::EventLoop():timerCallback(nullptr), signalCallback(nullptr), keyboardCallback(nullptr){
     for(int i = 0 ; i < 3; i++){
         fds[i] = {0};
@@ -34,16 +43,13 @@ void EventLoop::timer(int ms, void(*callback)()){
     memset(&spec, 0, sizeof(spec));
     spec.it_value.tv_sec = ms / 1000;
     spec.it_value.tv_nsec = (ms - (ms / 1000 * 1000)) * 1000;
+    cout<<spec.it_value.tv_nsec<<" "<<spec.it_value.tv_sec<<endl;
     spec.it_interval = spec.it_value;
     int tfd = timerfd_create(CLOCK_REALTIME, TFD_NONBLOCK | TFD_CLOEXEC);
-    if(tfd < 0){
-        perror("Create: ");
-        exit(EXIT_FAILURE);
-    }
-    if(timerfd_settime(tfd, 0, &spec, nullptr ) < 0){
-        perror("Set timerfd: ");
-        exit(EXIT_FAILURE);
-    }
+    if(tfd < 0)
+        handle_error("Create: ");
+    if(timerfd_settime(tfd, 0, &spec, nullptr ) < 0)
+        handle_error("Set timerfd: ");
     this->fds[TIME_POSI].fd = tfd;
     this->fds[TIME_POSI].events |= POLLIN;
 }
@@ -54,23 +60,114 @@ void reset_terminal_mode()
 {
     tcsetattr(0, TCSANOW, &orig_termios);
 }
-class KeyboardConio{
-    KeyboardConio()
-    {
-        struct termios new_termios;
-        /* take two copies - one for now, one for later */
-        tcgetattr(0, &orig_termios);
-        memcpy(&new_termios, &orig_termios, sizeof(new_termios));
+class ProcessConio{
+    public:
+    ProcessConio(){
+    struct termios new_termios;
 
-        /* register cleanup handler, and set the new terminal mode */
-        atexit(reset_terminal_mode);
-        cfmakeraw(&new_termios);
-        tcsetattr(0, TCSANOW, &new_termios);
+    /* take two copies - one for now, one for later */
+    tcgetattr(0, &orig_termios);
+    memcpy(&new_termios, &orig_termios, sizeof(new_termios));
+
+    new_termios.c_lflag &= (~ICANON);
+    new_termios.c_lflag &= (~ECHO);
+    new_termios.c_cc[VTIME] = 0;
+    new_termios.c_cc[VMIN] = 1;
+    /* register cleanup handler, and set the new terminal mode */
+    atexit(reset_terminal_mode);
+    tcsetattr(0, TCSANOW, &new_termios);
     }
-} keyboardConio;
+} processConio;
 
-void EventLoop::keyboard(void(*callback)(char)){
+void EventLoop::keyboard(void(*callback)(unsigned char)){
     this->keyboardCallback = callback;
+    int flag = fcntl(STDIN_FILENO, F_GETFL, 0);
+    if(flag < 0)
+        handle_error("Get STDIN fd:");
+    if(fcntl(STDIN_FILENO, F_SETFL, (flag|O_NONBLOCK)))
+        handle_error("Set STDIN NONBLOCK error:");
+    char c = 0;
     this->fds[KEYBOARD_POSI].fd = STDIN_FILENO;
-    
+    this->fds[KEYBOARD_POSI].events = POLLIN;
+}
+
+void EventLoop::signal(const sigset_t *mask, void(*callback)(int)){
+    if (sigprocmask(SIG_BLOCK, mask, NULL) == -1)
+        handle_error("Mask signal: ");
+    int sfd = signalfd(-1, mask, SFD_NONBLOCK);
+    if(sfd < 0)
+        handle_error("Signal fd create:");
+    this->fds[SIGNAL_POSI].fd = sfd;
+    this->fds[SIGNAL_POSI].events = POLLIN;
+}
+
+void EventLoop::run(){
+    if(this->fds[TIME_POSI].fd == -1 && this->fds[SIGNAL_POSI].fd == -1 && this->fds[KEYBOARD_POSI].fd == -1)
+        return;
+    for(int i = 0 ; i < 3; i++)
+        this->fds[i].revents = 0;
+    while(1){
+        int ret = poll(this->fds, 3, -1);
+        cout<<"ret: "<<ret<<endl;
+        if(ret < 0)
+            handle_error("Poll :");
+        if(this->fds[KEYBOARD_POSI].fd != -1 && this->fds[KEYBOARD_POSI].revents != 0){
+            if(~this->fds[KEYBOARD_POSI].revents & POLLIN)
+                handle_error("Keyboard fd unexpected event");
+            unsigned char c;
+            if ((read(this->fds[KEYBOARD_POSI].fd, &c, sizeof(c))) < 0) {
+                handle_error("Read Keyboard:");
+            } else if(this->keyboardCallback != nullptr){
+                this->keyboardCallback(c);
+            }
+        }
+        if(this->fds[SIGNAL_POSI].fd != -1 && this->fds[SIGNAL_POSI].revents != 0){
+            if(~this->fds[SIGNAL_POSI].revents & POLLIN)
+                handle_error("Signal fd unexpected event");
+            struct signalfd_siginfo fdsi;
+            if(read(this->fds[SIGNAL_POSI].fd, &fdsi, sizeof(fdsi)) != sizeof(fdsi)){
+                handle_error("Signalfd read:");
+            }
+            if(this->signalCallback != nullptr){
+                this->signalCallback(fdsi.ssi_signo);
+            }
+        }
+        if(this->fds[TIME_POSI].fd != -1 && this->fds[TIME_POSI].revents != 0){
+            if(~this->fds[TIME_POSI].revents & POLLIN){
+                handle_error("Timer fd unexpected event");
+            }
+                
+            uint64_t ret_time;
+            if(read(this->fds[TIME_POSI].fd, &ret_time, sizeof(uint64_t)) != sizeof(uint64_t)){
+                handle_error("Timerfd read:");
+            }
+            if(this->timerCallback != nullptr){
+                this->timerCallback();
+            }
+        }
+    }
+}
+
+
+void print(unsigned char c){
+    cout<<"char: "<<c<<endl;
+}
+
+void timerp(){
+    cout<<time(NULL)<<endl;
+}
+
+void signalp(int signal){
+    cout<<"signal: "<<signal<<endl;
+}
+
+int main(){
+    EventLoop loop;
+    loop.keyboard(print);
+    loop.timer(1000, timerp);
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, SIGINT); 
+    loop.signal(& set, signalp);
+    loop.run();
 }

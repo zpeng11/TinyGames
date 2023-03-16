@@ -25,7 +25,6 @@ int scanKeyboard()
     new_settings.c_lflag &= (~ICANON);
     new_settings.c_lflag &= (~ECHO);
     new_settings.c_cc[VTIME] = 0;
-    tcgetattr(0,&stored_settings);
     new_settings.c_cc[VMIN] = 1;
     tcsetattr(0,TCSANOW,&new_settings);
 

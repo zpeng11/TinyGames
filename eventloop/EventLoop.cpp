@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <assert.h>
 
 
 #include <iostream>
@@ -22,7 +23,7 @@ using namespace std;
            do { perror(msg); exit(EXIT_FAILURE); } while (0)
 
 
-EventLoop::EventLoop():timerCallback(nullptr), signalCallback(nullptr), keyboardCallback(nullptr){
+EventLoop::EventLoop():timerCallback(nullptr),keyboardCallback(nullptr), signalCallback(nullptr){
     for(int i = 0 ; i < 3; i++){
         fds[i] = {0};
         fds[i].fd = -1;
@@ -38,12 +39,12 @@ EventLoop::~EventLoop(){
 }
 
 void EventLoop::timer(int ms, void(*callback)()){
+    assert(this->timerCallback == nullptr && "Already have timer handler");
     this->timerCallback = callback;
     struct itimerspec spec;
     memset(&spec, 0, sizeof(spec));
     spec.it_value.tv_sec = ms / 1000;
     spec.it_value.tv_nsec = (ms - (ms / 1000 * 1000)) * 1000;
-    cout<<spec.it_value.tv_nsec<<" "<<spec.it_value.tv_sec<<endl;
     spec.it_interval = spec.it_value;
     int tfd = timerfd_create(CLOCK_REALTIME, TFD_NONBLOCK | TFD_CLOEXEC);
     if(tfd < 0)
@@ -80,18 +81,20 @@ class ProcessConio{
 } processConio;
 
 void EventLoop::keyboard(void(*callback)(unsigned char)){
+    assert(this->keyboardCallback == nullptr && "Already have keybaord handler");
     this->keyboardCallback = callback;
     int flag = fcntl(STDIN_FILENO, F_GETFL, 0);
     if(flag < 0)
         handle_error("Get STDIN fd:");
     if(fcntl(STDIN_FILENO, F_SETFL, (flag|O_NONBLOCK)))
         handle_error("Set STDIN NONBLOCK error:");
-    char c = 0;
     this->fds[KEYBOARD_POSI].fd = STDIN_FILENO;
     this->fds[KEYBOARD_POSI].events = POLLIN;
 }
 
 void EventLoop::signal(const sigset_t *mask, void(*callback)(int)){
+    assert(this->signalCallback == nullptr && "Already have signal handler");
+    this->signalCallback = callback;
     if (sigprocmask(SIG_BLOCK, mask, NULL) == -1)
         handle_error("Mask signal: ");
     int sfd = signalfd(-1, mask, SFD_NONBLOCK);
@@ -108,7 +111,6 @@ void EventLoop::run(){
         this->fds[i].revents = 0;
     while(1){
         int ret = poll(this->fds, 3, -1);
-        cout<<"ret: "<<ret<<endl;
         if(ret < 0)
             handle_error("Poll :");
         if(this->fds[KEYBOARD_POSI].fd != -1 && this->fds[KEYBOARD_POSI].revents != 0){
@@ -146,28 +148,4 @@ void EventLoop::run(){
             }
         }
     }
-}
-
-
-void print(unsigned char c){
-    cout<<"char: "<<c<<endl;
-}
-
-void timerp(){
-    cout<<time(NULL)<<endl;
-}
-
-void signalp(int signal){
-    cout<<"signal: "<<signal<<endl;
-}
-
-int main(){
-    EventLoop loop;
-    loop.keyboard(print);
-    loop.timer(1000, timerp);
-    sigset_t set;
-    sigemptyset(&set);
-    sigaddset(&set, SIGINT); 
-    loop.signal(& set, signalp);
-    loop.run();
 }

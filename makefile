@@ -1,4 +1,4 @@
-SUBDIRS := tests eventloop #2028  GreedySnake Tetris 
+SUBDIRS := tests eventloop #map 2028  GreedySnake Tetris 
 
 CXXFLAGS := -g -Wall $(addprefix -I,$(SUBDIRS))
 

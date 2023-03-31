@@ -23,6 +23,7 @@ class Map{
                 return std::hash<int>()(p.x) ^ (std::hash<int>()(p.y)<<1);
             }
         };
+        friend std::ostream &operator<<(std::ostream &os, const Point &p);
     };
     bool validPoint(const Point& p);
     typedef struct Point Size;
@@ -32,9 +33,16 @@ class Map{
     void clearCol(int col);
     void clearRow(int row);
     void clearPoint(const Point& p);
+    Size topLeft(){return Size{0, 0};}
+    Size topRight(){return Size{size.x - 1, 0};}
+    Size botLeft(){return Size{0 , size.y - 1};}
+    Size botRight(){return Size{size.x - 1 , size.y - 1};}
+    const std::unordered_set<Point, Point::Hash> & getFreePoints(){return freePoints;}
+    const std::unordered_set<Point, Point::Hash> & getUsedPoints(){return usedPoints;}
 
     private:
     Size size;
     std::unordered_set<Point, Point::Hash> freePoints;
     std::unordered_set<Point, Point::Hash> usedPoints;
+    void set(const Point& p, std::string str, int backgroundColor, int fontColor);
 };

@@ -2,6 +2,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <iostream>
+#include <cassert>
 
 const std::string ESC_PREFFIX = "\x1b[";
 
@@ -9,7 +10,7 @@ const std::string ESC_RESET_COLER = "\x1b[0m";
 const std::string ESC_BACKGROUND_COLER = "\x1b[47m";
 
 std::ostream &operator<<(std::ostream &os, const Map::Point &p){
-    os<<ESC_PREFFIX<<(p.x + 1)<<";"<<(p.y * 2)<<"f";
+    os<<ESC_PREFFIX<<(p.y + 1)<<";"<<(p.x * 2 + 1)<<"H";
 }
 
 
@@ -23,19 +24,15 @@ Map::Map(){
     for(int i = 0 ; i < size.y; i++){
         std::cout<<'\n';
     }
-    std::cout<<"\033[?25l";//hide curser
-    std::cout<<ESC_BACKGROUND_COLER;
+    std::cout<<"\x1b[?25l";//hide curser
     for(int i = 0; i < size.x; i++){
         for(int j = 0; j < size.y; j++){
             Map::Point p{i, j};
             this->freePoints.insert(p);
-            std::cout<<p<<"  ";
+            this->set(p, "  ", 47, -1);
         }
     }
-    std::cout<<ESC_RESET_COLER;
     //Scroll down to get a clear space
-
-    std::cout<<"\x1b[3J";
 }
 
 Map::~Map(){
@@ -45,7 +42,7 @@ Map::~Map(){
 }
 
 bool Map::validPoint(const Map::Point& p){
-    return p.x > 0 && p.y >0 && p.x <= this->size.x && p.y <= this->size.y;
+    return p.x >= 0 && p.y >= 0 && p.x < this->size.x && p.y < this->size.y;
 }
 
 void Map::clearAll(){
@@ -57,5 +54,46 @@ void Map::clearAll(){
 }
 
 void Map::clearCol(int col){
-    for(int i = 0 ; i < )
+    for(int i = 0 ; i < this->size.y; i++){
+        Map::Point p{col, i};
+        clearPoint(p);
+    }
+}
+
+void Map::clearRow(int row){
+    for(int i = 0 ; i < this->size.x; i++){
+        Map::Point p{i, row};
+        clearPoint(p);
+    }
+}
+
+void Map::setPoint(const Map::Point& p, std::string str, int backgroundColor, int fontColor){
+    this->set(p, str, backgroundColor, fontColor);
+    auto found = this->freePoints.find(p);
+    if(found != this->freePoints.end()){
+        this->usedPoints.insert(*found);
+        this->freePoints.erase(*found);
+    }
+}
+
+void Map::clearPoint(const Map::Point& p){
+    this->set(p, "  ", 47, -1);
+    auto found = this->usedPoints.find(p);
+    if(found != this->usedPoints.end()){
+        this->freePoints.insert(*found);
+        this->usedPoints.erase(*found);
+    }
+}
+
+void Map::set(const Map::Point& p, std::string str, int backgroundColor, int fontColor){
+    if(this->validPoint(p) == false){
+        assert(this->validPoint(p) == true);
+    }
+    std::cout<<p; //Move to position
+    if(fontColor > 0)
+        std::cout<<ESC_PREFFIX<<"0;"<<backgroundColor<<';'<<fontColor<<'m';
+    else
+        std::cout<<ESC_PREFFIX<<"0;"<<backgroundColor<<'m';
+    std::cout<<str<<ESC_RESET_COLER;
+    std::cout.flush();
 }

@@ -23,7 +23,7 @@ using namespace std;
            do { perror(msg); exit(EXIT_FAILURE); } while (0)
 
 
-EventLoop::EventLoop():timerCallback(nullptr),keyboardCallback(nullptr), signalCallback(nullptr){
+EventLoop::EventLoop():timerCallback(nullptr),keyboardCallback(nullptr), signalCallback(nullptr), running(true){
     for(int i = 0 ; i < 3; i++){
         fds[i] = {0};
         fds[i].fd = -1;
@@ -44,7 +44,9 @@ void EventLoop::timer(int ms, void(*callback)()){
     struct itimerspec spec;
     memset(&spec, 0, sizeof(spec));
     spec.it_value.tv_sec = ms / 1000;
-    spec.it_value.tv_nsec = (ms - (ms / 1000 * 1000)) * 1000;
+    spec.it_value.tv_nsec = (ms - 1000*spec.it_value.tv_sec) * 1000000 % 1000000000;
+    //std::cout<<ms<<" "<<spec.it_value.tv_nsec<<" "<<spec.it_value.tv_sec<<std::endl;
+    
     spec.it_interval = spec.it_value;
     int tfd = timerfd_create(CLOCK_REALTIME, TFD_NONBLOCK | TFD_CLOEXEC);
     if(tfd < 0)
@@ -109,7 +111,7 @@ void EventLoop::run(){
         return;
     for(int i = 0 ; i < 3; i++)
         this->fds[i].revents = 0;
-    while(1){
+    while(this->running){
         int ret = poll(this->fds, 3, -1);
         if(ret < 0)
             handle_error("Poll :");

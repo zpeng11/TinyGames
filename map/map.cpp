@@ -10,12 +10,13 @@ const std::string ESC_RESET_COLER = "\x1b[0m";
 const std::string ESC_BACKGROUND_COLER = "\x1b[47m";
 
 std::ostream &operator<<(std::ostream &os, const Map::Point &p){
-    os<<ESC_PREFFIX<<(p.y + 1)<<";"<<(p.x * 2 + 1)<<"H";
+
+    os<<ESC_PREFFIX<<std::to_string(p.y + 1)<<";"<<std::to_string(p.x * 2 + 1)<<"H";
 }
 
 
 
-Map::Map(){
+Map::Map(int bgcolor){
     struct winsize w;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
     this->size.x = w.ws_col/2;
@@ -24,12 +25,13 @@ Map::Map(){
     for(int i = 0 ; i < size.y; i++){
         std::cout<<'\n';
     }
+    this->bgcolor = bgcolor;
     std::cout<<"\x1b[?25l";//hide curser
     for(int i = 0; i < size.x; i++){
         for(int j = 0; j < size.y; j++){
             Map::Point p{i, j};
             this->freePoints.insert(p);
-            this->set(p, "  ", 47, -1);
+            this->clearPoint(p);
         }
     }
     //Scroll down to get a clear space
@@ -77,7 +79,7 @@ void Map::setPoint(const Map::Point& p, std::string str, int backgroundColor, in
 }
 
 void Map::clearPoint(const Map::Point& p){
-    this->set(p, "  ", 47, -1);
+    this->set(p, "  ", this->bgcolor, -1);
     auto found = this->usedPoints.find(p);
     if(found != this->usedPoints.end()){
         this->freePoints.insert(*found);

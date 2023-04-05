@@ -10,6 +10,7 @@ class EventLoop{
     void(*timerCallback)();
     void(*keyboardCallback)(unsigned char);
     void(*signalCallback)(int);
+    bool running;
     public:
     EventLoop();
     ~EventLoop();
@@ -17,4 +18,5 @@ class EventLoop{
     void keyboard(void(*callback)(unsigned char));
     void signal(const sigset_t *mask, void(*callback)(int));
     void run();
+    void end(){ running = false;}
 };

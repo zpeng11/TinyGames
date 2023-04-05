@@ -3,15 +3,15 @@
 #include <string>
 class Map{
     public:
-    Map();
+    Map(int bgcolor = 47);
     ~Map();
     struct Point{
         int x;
         int y;
-        Point left(){return {x - 1, y};}
-        Point right(){return {x + 1, y};}
-        Point up(){return {x, y - 1};}
-        Point down(){return {x, y + 1};}
+        Point left() const{return {x - 1, y};}
+        Point right() const{return {x + 1, y};}
+        Point up() const{return {x, y - 1};}
+        Point down() const{return {x, y + 1};}
         bool operator==(const Point& otherPos) const
         {
             if (this->x == otherPos.x && this->y == otherPos.y) return true;
@@ -33,10 +33,11 @@ class Map{
     void clearCol(int col);
     void clearRow(int row);
     void clearPoint(const Point& p);
-    Size topLeft(){return Size{0, 0};}
-    Size topRight(){return Size{size.x - 1, 0};}
-    Size botLeft(){return Size{0 , size.y - 1};}
-    Size botRight(){return Size{size.x - 1 , size.y - 1};}
+    Point topLeft(){return Point{0, 0};}
+    Point topRight(){return Point{size.x - 1, 0};}
+    Point botLeft(){return Point{0 , size.y - 1};}
+    Point botRight(){return Point{size.x - 1 , size.y - 1};}
+    Point center(){return Point{size.x /2 , size.y / 2};}
     const std::unordered_set<Point, Point::Hash> & getFreePoints(){return freePoints;}
     const std::unordered_set<Point, Point::Hash> & getUsedPoints(){return usedPoints;}
 
@@ -44,5 +45,6 @@ class Map{
     Size size;
     std::unordered_set<Point, Point::Hash> freePoints;
     std::unordered_set<Point, Point::Hash> usedPoints;
-    void set(const Point& p, std::string str, int backgroundColor, int fontColor);
+    void set(const Point& p, std::string str, int backgroundColor, int fontColor = -1);
+    int bgcolor;
 };

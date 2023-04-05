@@ -21,5 +21,5 @@ int main(){
     std::cout<<"Map size:"<<m.getSize().x<<" "<<m.getSize().y<<std::endl;
     std::cout<<m.getFreePoints().size()<<std::endl;
     std::cout<<m.getUsedPoints().size()<<std::endl;
-    sleep(10);
+    sleep(5);
 }
